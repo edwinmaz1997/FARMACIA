@@ -12,6 +12,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Compilar CSS (Tailwind)
+        run: npx --yes tailwindcss@3.4.19 -c tailwind.config.js -i assets/src/app.css -o assets/app.css --minify
+
       - name: Deploy por FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -25,6 +33,11 @@ jobs:
           exclude: |
             **/.git*
             **/.git*/**
+            **/node_modules/**
             .github/**
+            assets/src/**
+            tailwind.config.js
+            package.json
+            package-lock.json
             README.md
             config/config.local.php
