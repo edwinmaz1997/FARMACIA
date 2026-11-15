@@ -107,6 +107,34 @@ if (is_post()) {
     } elseif ($acc === 'toggle_usuario') {
         q('UPDATE usuarios SET activo = 1 - activo WHERE id = ? AND farmacia_id = ?', [(int) p('usuario_id'), $id]);
         flash('success', 'Usuario actualizado.');
+    } elseif ($acc === 'reiniciar') {
+        if (p('confirmar') !== $f['nombre']) {
+            flash('error', 'Escribe el nombre exacto de la farmacia para reiniciar sus datos.');
+            back();
+        }
+        $pdo = db();
+        $pdo->beginTransaction();
+        $borrar = function ($sql) use ($id) { return q($sql, [$id])->rowCount(); };
+        $n = [];
+        $n['ventas'] = $borrar('DELETE FROM ventas WHERE farmacia_id = ?');
+        $borrar('DELETE FROM movimientos WHERE farmacia_id = ?');
+        $borrar('DELETE FROM lotes WHERE farmacia_id = ?');
+        $n['compras'] = $borrar('DELETE FROM compras WHERE farmacia_id = ?');
+        $n['gastos'] = $borrar('DELETE FROM gastos WHERE farmacia_id = ?');
+        if (p('productos')) {
+            $n['productos'] = $borrar('DELETE FROM productos WHERE farmacia_id = ?');
+            $borrar('DELETE FROM categorias WHERE farmacia_id = ?');
+            foreach (['Medicamentos', 'Genéricos', 'Vitaminas y suplementos', 'Cuidado personal', 'Bebés', 'Material de curación', 'Otros'] as $c) {
+                insert('categorias', ['farmacia_id' => $id, 'nombre' => $c]);
+            }
+        }
+        if (p('clientes')) $n['clientes'] = $borrar('DELETE FROM clientes WHERE farmacia_id = ?');
+        if (p('proveedores')) $n['proveedores'] = $borrar('DELETE FROM proveedores WHERE farmacia_id = ?');
+        if (p('usuarios')) $n['vendedores'] = q("DELETE FROM usuarios WHERE farmacia_id = ? AND rol <> 'admin'", [$id])->rowCount();
+        $pdo->commit();
+        $txt = [];
+        foreach ($n as $k => $v) $txt[] = $v . ' ' . $k;
+        flash('success', 'Datos reiniciados: se eliminaron ' . implode(', ', $txt) . '. El inventario quedó en cero y la numeración de ventas vuelve a empezar en #1.');
     } elseif ($acc === 'eliminar') {
         if (p('confirmar') !== $f['nombre']) {
             flash('error', 'Escribe el nombre exacto de la farmacia para eliminarla.');
@@ -310,6 +338,21 @@ if ($a === 'ver') {
       <div class="flex justify-between gap-3"><span class="text-slate-500">Última venta</span><span><?= fdatetime($st['ultima_venta']) ?></span></div>
       <?php if ($f['notas']): ?><div class="pt-2 text-slate-600 bg-slate-50 rounded-lg p-3"><?= nl2br(e($f['notas'])) ?></div><?php endif; ?>
     </div>
+
+    <form method="post" class="card p-6 border-amber-200 space-y-3" data-confirm="Se borrarán los datos seleccionados de esta farmacia y no se puede deshacer. ¿Continuar?">
+      <?= csrf_field() ?><input type="hidden" name="accion" value="reiniciar"><input type="hidden" name="id" value="<?= $id ?>">
+      <h3 class="font-bold text-amber-700 flex items-center gap-2"><i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reiniciar datos</h3>
+      <p class="text-xs text-slate-500">Deja la farmacia limpia para entregarla. Siempre se borran <b>ventas, compras, gastos, lotes e inventario</b>. Se conservan la farmacia, su suscripción, sus pagos y el usuario administrador.</p>
+      <div class="space-y-2 text-sm">
+        <label class="flex items-center gap-2"><input type="checkbox" name="productos" value="1" checked class="rounded text-amber-600"> Borrar también productos y categorías</label>
+        <label class="flex items-center gap-2"><input type="checkbox" name="clientes" value="1" checked class="rounded text-amber-600"> Borrar también clientes</label>
+        <label class="flex items-center gap-2"><input type="checkbox" name="proveedores" value="1" checked class="rounded text-amber-600"> Borrar también proveedores</label>
+        <label class="flex items-center gap-2"><input type="checkbox" name="usuarios" value="1" class="rounded text-amber-600"> Borrar usuarios vendedores</label>
+      </div>
+      <p class="text-xs text-slate-500">Escribe <b><?= e($f['nombre']) ?></b> para confirmar.</p>
+      <input name="confirmar" class="input" autocomplete="off" required>
+      <button class="btn w-full bg-amber-500 text-white hover:bg-amber-600"><i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reiniciar datos</button>
+    </form>
 
     <form method="post" class="card p-6 border-rose-200 space-y-3" data-confirm="Esta acción elimina TODA la información de la farmacia y no se puede deshacer. ¿Continuar?">
       <?= csrf_field() ?><input type="hidden" name="accion" value="eliminar"><input type="hidden" name="id" value="<?= $id ?>">
