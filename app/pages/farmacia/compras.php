@@ -66,6 +66,25 @@ if ($a === 'nueva') {
   </div>
 </div>
 
+<div id="modalProd" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm grid place-items-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
+  <form id="fProd" class="card w-full max-w-lg p-6 max-h-[92vh] overflow-y-auto" onsubmit="guardarProducto(event)">
+    <div class="flex items-start gap-3 mb-5">
+      <div class="h-11 w-11 rounded-xl bg-brand-50 text-brand-600 grid place-items-center shrink-0"><i data-lucide="pill" class="w-5 h-5"></i></div>
+      <div class="flex-1"><h3 class="font-bold text-lg leading-tight">Nuevo producto</h3><p class="text-sm text-slate-500">Se agregará a esta compra al guardarlo.</p></div>
+      <button type="button" onclick="modalProd.classList.add('hidden')" class="p-2 -m-2 rounded-lg text-slate-400 hover:bg-slate-100"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div class="sm:col-span-2"><label class="label">Nombre *</label><input name="nombre" class="input" required></div>
+      <div><label class="label">Código de barras</label><input name="codigo" class="input"></div>
+      <div><label class="label">Presentación</label><input name="presentacion" class="input" placeholder="Caja 10 tabletas"></div>
+      <div><label class="label">Precio de venta</label><input type="number" step="0.01" min="0" name="precio_venta" class="input"></div>
+    </div>
+    <p class="text-xs text-slate-500 mt-3">Podrás completar principio activo, laboratorio y categoría después desde Productos.</p>
+    <div id="errProd" class="hidden mt-4 rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-3"></div>
+    <div class="flex gap-2 justify-end mt-6"><button type="button" class="btn-light" onclick="modalProd.classList.add('hidden')">Cancelar</button><button class="btn-primary"><i data-lucide="check" class="w-4 h-4"></i> Guardar y agregar</button></div>
+  </form>
+</div>
+
 <script>
 let lineas = [], res = [], tm = null;
 const $ = id => document.getElementById(id);
@@ -111,12 +130,18 @@ function tot() {
   let t = 0; lineas.forEach((l, k) => { const s = l.cantidad * l.costo; t += s; const el = $('sub' + k); if (el) el.textContent = fmtMoney(s); });
   $('total').textContent = fmtMoney(t); $('btnGuardar').disabled = !lineas.length;
 }
-async function crearProducto() {
-  const nombre = prompt('Nombre del nuevo producto:', $('buscar').value); if (!nombre) return;
-  const codigo = prompt('Código de barras (opcional):', '') || '';
-  const precio = prompt('Precio de venta:', '0') || '0';
-  const r = await api('crear_producto', { body: { nombre, codigo, precio_venta: precio } });
-  if (!r.ok) return alert(r.error); agregar(r.data);
+function crearProducto() {
+  const f = $('fProd'); f.reset(); $('errProd').classList.add('hidden');
+  const t = $('buscar').value.trim();
+  if (t) { if (/^\d{6,}$/.test(t)) f.codigo.value = t; else f.nombre.value = t; }
+  $('resultados').classList.add('hidden'); $('modalProd').classList.remove('hidden');
+  setTimeout(() => f.nombre.focus(), 50);
+}
+async function guardarProducto(ev) {
+  ev.preventDefault();
+  const r = await api('crear_producto', { body: Object.fromEntries(new FormData($('fProd')).entries()) });
+  if (!r.ok) { $('errProd').textContent = r.error; $('errProd').classList.remove('hidden'); return; }
+  $('modalProd').classList.add('hidden'); agregar(r.data);
 }
 async function guardar() {
   if (!lineas.length) return;

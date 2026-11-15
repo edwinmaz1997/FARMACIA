@@ -28,6 +28,24 @@ if ($action === 'productos') {
     json_out(['ok' => true, 'data' => $rows]);
 }
 
+if ($action === 'top_productos') {
+    $sel = "SELECT p.id, p.codigo, p.nombre, p.presentacion, p.principio_activo, p.laboratorio, p.precio_venta, p.precio_compra, p.requiere_receta, p.stock_minimo,
+        (SELECT COALESCE(SUM(l.cantidad_actual),0) FROM lotes l WHERE l.producto_id = p.id AND l.cantidad_actual > 0 AND (l.fecha_vencimiento IS NULL OR l.fecha_vencimiento >= CURDATE())) stock,
+        (SELECT MIN(l.fecha_vencimiento) FROM lotes l WHERE l.producto_id = p.id AND l.cantidad_actual > 0 AND (l.fecha_vencimiento IS NULL OR l.fecha_vencimiento >= CURDATE())) prox_venc";
+    $rows = all("$sel, t.vendido FROM productos p JOIN (
+            SELECT d.producto_id, SUM(d.cantidad) vendido FROM venta_detalle d JOIN ventas v ON v.id = d.venta_id
+            WHERE v.farmacia_id = ? AND v.estado = 'completada' AND v.fecha >= DATE_SUB(CURDATE(), INTERVAL 90 DAY) GROUP BY d.producto_id
+        ) t ON t.producto_id = p.id
+        WHERE p.farmacia_id = ? AND p.activo = 1 HAVING stock > 0 ORDER BY t.vendido DESC LIMIT 12", [$F, $F]);
+    if (count($rows) < 12) {
+        $ids = array_column($rows, 'id') ?: [0];
+        $extra = all("$sel, 0 vendido FROM productos p WHERE p.farmacia_id = ? AND p.activo = 1 AND p.id NOT IN (" . implode(',', array_map('intval', $ids)) . ")
+            HAVING stock > 0 ORDER BY p.id DESC LIMIT " . (12 - count($rows)), [$F]);
+        $rows = array_merge($rows, $extra);
+    }
+    json_out(['ok' => true, 'data' => $rows]);
+}
+
 if ($action === 'clientes') {
     $t = '%' . g('q') . '%';
     json_out(['ok' => true, 'data' => all('SELECT id, nombre, nit, telefono FROM clientes WHERE farmacia_id = ? AND activo = 1 AND (nombre LIKE ? OR nit LIKE ? OR telefono LIKE ?) ORDER BY nombre LIMIT 10', [$F, $t, $t, $t])]);
@@ -40,7 +58,9 @@ $in = api_input();
 if ($action === 'crear_cliente') {
     $nombre = trim(isset($in['nombre']) ? $in['nombre'] : '');
     if ($nombre === '') json_out(['ok' => false, 'error' => 'El nombre es obligatorio']);
-    $id = insert('clientes', ['farmacia_id' => $F, 'nombre' => $nombre, 'nit' => nulo(isset($in['nit']) ? $in['nit'] : ''), 'telefono' => nulo(isset($in['telefono']) ? $in['telefono'] : '')]);
+    $campo = function ($k) use ($in) { return nulo(isset($in[$k]) ? trim((string) $in[$k]) : ''); };
+    $nit = $campo('nit');
+    $id = insert('clientes', ['farmacia_id' => $F, 'nombre' => $nombre, 'nit' => $nit ? strtoupper($nit) : null, 'dpi' => $campo('dpi'), 'telefono' => $campo('telefono'), 'email' => $campo('email'), 'direccion' => $campo('direccion')]);
     json_out(['ok' => true, 'data' => one('SELECT id, nombre, nit, telefono FROM clientes WHERE id = ?', [$id])]);
 }
 

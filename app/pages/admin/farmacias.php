@@ -321,12 +321,18 @@ if ($a === 'ver') {
   </div>
 </div>
 
-<form method="post" id="fReset" class="hidden"><?= csrf_field() ?><input type="hidden" name="accion" value="reset"><input type="hidden" name="id" value="<?= $id ?>"><input type="hidden" name="usuario_id"><input type="hidden" name="password"></form>
+<div id="mReset" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm grid place-items-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
+  <form method="post" id="fReset" class="card w-full max-w-sm p-6 space-y-4">
+    <?= csrf_field() ?><input type="hidden" name="accion" value="reset"><input type="hidden" name="id" value="<?= $id ?>"><input type="hidden" name="usuario_id">
+    <div><h3 class="font-bold text-lg">Cambiar contraseña</h3><p id="rNombre" class="text-sm text-slate-500"></p></div>
+    <div><label class="label">Nueva contraseña</label><input name="password" class="input" minlength="8" required autocomplete="off"></div>
+    <div class="flex gap-2 justify-end"><button type="button" class="btn-light" onclick="mReset.classList.add('hidden')">Cancelar</button><button class="btn-primary">Guardar</button></div>
+  </form>
+</div>
 <script>
 function resetPw(id, nombre) {
-  const pw = prompt('Nueva contraseña para ' + nombre + ' (mínimo 8 caracteres):');
-  if (!pw) return;
-  fReset.usuario_id.value = id; fReset.password.value = pw; fReset.submit();
+  fReset.reset(); fReset.elements['usuario_id'].value = id; rNombre.textContent = nombre;
+  mReset.classList.remove('hidden'); fReset.elements['password'].focus();
 }
 </script>
 <?php

@@ -13,6 +13,16 @@ $puedePrecio = is_admin();
       <div id="resultados" class="hidden absolute left-4 right-4 top-full -mt-2 z-20 card max-h-[60vh] overflow-y-auto divide-y divide-slate-100"></div>
     </div>
 
+    <div class="card p-4" id="topBox">
+      <div class="flex items-center justify-between mb-3 px-1">
+        <h3 class="font-bold flex items-center gap-2 text-sm"><i data-lucide="flame" class="w-4 h-4 text-amber-500"></i> Más vendidos</h3>
+        <button onclick="toggleTop()" id="btnTop" class="text-xs font-semibold text-slate-500 hover:text-slate-800">Ocultar</button>
+      </div>
+      <div id="topProductos" class="grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4 gap-2.5">
+        <?php for ($i = 0; $i < 8; $i++): ?><div class="h-[88px] rounded-xl bg-slate-100 animate-pulse"></div><?php endfor; ?>
+      </div>
+    </div>
+
     <div class="card overflow-hidden">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
         <h3 class="font-bold flex items-center gap-2"><i data-lucide="shopping-cart" class="w-4 h-4 text-brand-600"></i> Carrito <span id="nItems" class="chip bg-slate-100 text-slate-600">0</span></h3>
@@ -76,6 +86,29 @@ $puedePrecio = is_admin();
       <button onclick="nuevaVenta()" class="btn-primary">Nueva venta</button>
     </div>
   </div>
+</div>
+
+<div id="modalCliente" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm grid place-items-center p-4" onclick="if(event.target===this)cerrarCliente()">
+  <form id="fCliente" class="card w-full max-w-lg p-6 max-h-[92vh] overflow-y-auto" onsubmit="guardarCliente(event)">
+    <div class="flex items-start gap-3 mb-5">
+      <div class="h-11 w-11 rounded-xl bg-brand-50 text-brand-600 grid place-items-center shrink-0"><i data-lucide="user-plus" class="w-5 h-5"></i></div>
+      <div class="flex-1"><h3 class="font-bold text-lg leading-tight">Nuevo cliente</h3><p class="text-sm text-slate-500">Se asignará a esta venta al guardarlo.</p></div>
+      <button type="button" onclick="cerrarCliente()" class="p-2 -m-2 rounded-lg text-slate-400 hover:bg-slate-100"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div class="sm:col-span-2"><label class="label">Nombre completo *</label><input name="nombre" class="input" required></div>
+      <div><label class="label">NIT</label><input name="nit" class="input" placeholder="CF"></div>
+      <div><label class="label">Teléfono</label><input name="telefono" class="input" inputmode="tel"></div>
+      <div><label class="label">DPI</label><input name="dpi" class="input" inputmode="numeric"></div>
+      <div><label class="label">Correo</label><input type="email" name="email" class="input"></div>
+      <div class="sm:col-span-2"><label class="label">Dirección</label><input name="direccion" class="input"></div>
+    </div>
+    <div id="errCliente" class="hidden mt-4 rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-3"></div>
+    <div class="flex gap-2 justify-end mt-6">
+      <button type="button" class="btn-light" onclick="cerrarCliente()">Cancelar</button>
+      <button class="btn-primary" id="btnGuardarCliente"><i data-lucide="check" class="w-4 h-4"></i> Guardar y asignar</button>
+    </div>
+  </form>
 </div>
 
 <script>
@@ -154,6 +187,7 @@ function render() {
       </div>`).join('');
   }
   totales();
+  if (typeof pintarTop === 'function' && topProd.length) pintarTop();
 }
 function cant(k, d) { const i = cart[k]; i.cantidad = Math.min(i.stock, Math.max(1, i.cantidad + d)); render(); }
 function setCant(k, v) { const i = cart[k]; v = parseInt(v) || 1; if (v > i.stock) { alert('Stock disponible: ' + i.stock); v = i.stock; } i.cantidad = Math.max(1, v); render(); }
@@ -199,11 +233,26 @@ function setCliente(c) {
   $('clienteBox').classList.toggle('hidden', !!c);
   if (c) $('clienteNom').textContent = c.nombre + (c.nit ? ' · ' + c.nit : '');
 }
-async function nuevoCliente() {
-  const nombre = prompt('Nombre del cliente:', $('buscarCliente').value); if (!nombre) return;
-  const nit = prompt('NIT (deja vacío para CF):', '') || '';
-  const r = await api('crear_cliente', { body: { nombre, nit } });
-  if (!r.ok) return alert(r.error); setCliente(r.data);
+function nuevoCliente() {
+  const f = $('fCliente'); f.reset(); $('errCliente').classList.add('hidden');
+  const t = $('buscarCliente').value.trim();
+  if (t) { if (/^[0-9kK-]+$/.test(t)) f.nit.value = t; else f.nombre.value = t; }
+  $('resClientes').classList.add('hidden');
+  $('modalCliente').classList.remove('hidden');
+  setTimeout(() => (f.nombre.value ? f.nit : f.nombre).focus(), 50);
+}
+function cerrarCliente() { $('modalCliente').classList.add('hidden'); $('buscar').focus(); }
+async function guardarCliente(ev) {
+  ev.preventDefault();
+  const f = $('fCliente'), btn = $('btnGuardarCliente');
+  const body = Object.fromEntries(new FormData(f).entries());
+  btn.disabled = true;
+  try {
+    const r = await api('crear_cliente', { body });
+    if (!r.ok) { $('errCliente').textContent = r.error; $('errCliente').classList.remove('hidden'); return; }
+    setCliente(r.data); $('modalCliente').classList.add('hidden'); $('buscar').focus();
+  } catch (e) { $('errCliente').textContent = 'No se pudo guardar. Revisa tu conexión.'; $('errCliente').classList.remove('hidden'); }
+  finally { btn.disabled = false; }
 }
 
 async function cobrar() {
@@ -220,9 +269,37 @@ async function cobrar() {
     $('modalOk').classList.remove('hidden');
   } catch (e) { alert('No se pudo registrar la venta. Revisa tu conexión.'); $('btnCobrar').disabled = false; }
 }
-function nuevaVenta() { cart = []; setCliente(null); $('descuento').value = 0; $('recibido').value = ''; $('notas').value = ''; $('modalOk').classList.add('hidden'); setMetodo('efectivo'); render(); $('buscar').focus(); }
+function nuevaVenta() { cart = []; setCliente(null); $('descuento').value = 0; $('recibido').value = ''; $('notas').value = ''; $('modalOk').classList.add('hidden'); setMetodo('efectivo'); render(); cargarTop(); $('buscar').focus(); }
+
+// Más vendidos
+let topProd = [];
+async function cargarTop() {
+  try { const r = await api('top_productos'); topProd = r.data || []; } catch (e) { topProd = []; }
+  pintarTop();
+}
+function pintarTop() {
+  const box = $('topProductos');
+  if (!topProd.length) { $('topBox').classList.add('hidden'); return; }
+  box.innerHTML = topProd.map((p, i) => {
+    const enCarro = cart.find(c => c.producto_id == p.id);
+    return `<button data-t="${i}" class="${i >= 6 ? 'hidden sm:flex' : 'flex'} relative flex-col text-left rounded-xl border ${enCarro ? 'border-brand-400 bg-brand-50/60' : 'border-slate-200 bg-white hover:border-brand-300 hover:bg-brand-50/30'} p-3 transition active:scale-[.98]">
+      ${enCarro ? `<span class="absolute -top-2 -right-2 h-6 min-w-6 px-1.5 rounded-full bg-brand-600 text-white text-xs font-bold grid place-items-center">${enCarro.cantidad}</span>` : ''}
+      <span class="font-semibold text-sm leading-snug line-clamp-2">${escapeHtml(p.nombre)}</span>
+      <span class="text-[11px] text-slate-500 truncate w-full">${escapeHtml(p.presentacion || p.laboratorio || '')}</span>
+      <span class="mt-auto pt-1.5 flex items-end justify-between w-full gap-2"><span class="font-extrabold text-brand-700">${fmtMoney(p.precio_venta)}</span><span class="text-[11px] ${Number(p.stock) <= Number(p.stock_minimo) ? 'text-amber-600' : 'text-slate-400'}">Stock ${p.stock}</span></span>
+    </button>`;
+  }).join('');
+  box.querySelectorAll('[data-t]').forEach(b => b.onclick = () => agregar(topProd[b.dataset.t]));
+}
+function toggleTop() {
+  const oculto = $('topProductos').classList.toggle('hidden');
+  $('btnTop').textContent = oculto ? 'Mostrar' : 'Ocultar';
+  try { localStorage.setItem('pos_top_oculto', oculto ? '1' : ''); } catch (e) {}
+}
+try { if (localStorage.getItem('pos_top_oculto')) { $('topProductos').classList.add('hidden'); $('btnTop').textContent = 'Mostrar'; } } catch (e) {}
 
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('modalCliente').classList.contains('hidden')) cerrarCliente();
   if (e.key === 'F2') { e.preventDefault(); $('buscar').focus(); }
   if (e.key === 'F9') { e.preventDefault(); cobrar(); }
 });
@@ -230,6 +307,6 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#resultados') && e.target !== $('buscar')) $('resultados').classList.add('hidden');
   if (!e.target.closest('#resClientes') && e.target !== $('buscarCliente')) $('resClientes').classList.add('hidden');
 });
-setMetodo('efectivo'); render(); $('buscar').focus();
+setMetodo('efectivo'); render(); cargarTop(); $('buscar').focus();
 </script>
 <?php layout_end();
