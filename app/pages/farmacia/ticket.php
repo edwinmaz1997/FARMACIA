@@ -16,6 +16,7 @@ $f = farmacia_actual();
   hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; }
   table { width: 100%; border-collapse: collapse; } td { vertical-align: top; padding: 1px 0; }
   .big { font-size: 16px; }
+  .logo { max-width: 60%; max-height: 80px; object-fit: contain; margin: 0 auto 6px; display: block; }
   .btns { text-align: center; margin: 12px; font-family: system-ui; }
   .btns button { padding: 10px 18px; border-radius: 10px; border: 0; background: #059669; color: #fff; font-weight: 600; cursor: pointer; margin: 0 4px; }
   .anulada { color: #b91c1c; border: 2px solid #b91c1c; padding: 4px; margin: 6px 0; }
@@ -23,6 +24,7 @@ $f = farmacia_actual();
 </style></head>
 <body>
 <div class="t">
+  <?php if ($lu = logo_url($f)): ?><div class="c"><img src="<?= e($lu) ?>" alt="" class="logo"></div><?php endif; ?>
   <div class="c b big"><?= e($f['nombre']) ?></div>
   <?php if ($f['nit']): ?><div class="c">NIT: <?= e($f['nit']) ?></div><?php endif; ?>
   <?php if ($f['direccion']): ?><div class="c"><?= e($f['direccion']) ?></div><?php endif; ?>
@@ -54,5 +56,5 @@ $f = farmacia_actual();
   <div class="c" style="margin-top:6px;font-size:10px">Documento no válido como factura</div>
 </div>
 <div class="btns"><button onclick="print()">Imprimir</button><button onclick="close()" style="background:#475569">Cerrar</button></div>
-<script>window.addEventListener('load', () => setTimeout(() => print(), 300));</script>
+<script>window.addEventListener('load', () => setTimeout(() => print(), 400));</script>
 </body></html>

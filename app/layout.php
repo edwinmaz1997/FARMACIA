@@ -104,9 +104,13 @@ function layout_start($title, $active = '')
   <div id="sb-backdrop" class="fixed inset-0 z-30 bg-slate-900/40 backdrop-blur-sm hidden lg:hidden no-print" onclick="toggleSidebar(false)"></div>
   <aside id="sidebar" class="no-print fixed inset-y-0 left-0 z-40 w-72 -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen transition-transform duration-200 bg-white border-r border-slate-200/70 flex flex-col">
     <div class="h-16 flex items-center gap-3 px-5 border-b border-slate-100">
+      <?php if ($f && ($lu = logo_url($f))): ?>
+        <div class="h-10 w-10 shrink-0 rounded-xl border border-slate-200 bg-white p-0.5 overflow-hidden"><img src="<?= e($lu) ?>" alt="" class="w-full h-full object-contain"></div>
+      <?php else: ?>
       <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 grid place-items-center text-white shadow-lg shadow-brand-500/30">
         <i data-lucide="cross" class="w-5 h-5"></i>
       </div>
+      <?php endif; ?>
       <div class="min-w-0">
         <div class="font-extrabold tracking-tight text-slate-900 leading-tight"><?= e($app) ?></div>
         <div class="text-[11px] text-slate-500 truncate"><?= $f ? e($f['nombre']) : 'Panel de plataforma' ?></div>
@@ -230,6 +234,32 @@ function install_ui()
 }
 
 // ---------- Componentes ----------
+function logo_field($f)
+{
+    $url = logo_url($f);
+    ?>
+<div class="flex items-center gap-4">
+  <div id="logoPrev" class="h-20 w-32 shrink-0 rounded-2xl border border-slate-200 bg-white p-2 flex items-center justify-center overflow-hidden">
+    <?php if ($url): ?><img src="<?= e($url) ?>" alt="Logo" class="w-full h-full object-contain"><?php else: ?><i data-lucide="image" class="w-7 h-7 text-slate-300"></i><?php endif; ?>
+  </div>
+  <div class="flex-1 min-w-0 space-y-2">
+    <label class="btn-light btn-sm cursor-pointer"><i data-lucide="upload" class="w-3.5 h-3.5"></i> <?= $url ? 'Cambiar logo' : 'Subir logo' ?>
+      <input type="file" name="logo" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" onchange="previewLogo(this)">
+    </label>
+    <?php if ($url): ?><label class="flex items-center gap-2 text-xs text-slate-500"><input type="checkbox" name="quitar_logo" value="1" class="rounded text-rose-600"> Quitar logo</label><?php endif; ?>
+    <div class="text-xs text-slate-500">PNG, JPG o WEBP · máx. 2 MB. Sale en el ticket y en el menú. Para impresoras térmicas usa un logo en blanco y negro.</div>
+  </div>
+</div>
+<script>
+function previewLogo(inp) {
+  const f = inp.files[0]; if (!f) return;
+  if (f.size > 2 * 1024 * 1024) { alert('El logo no debe pesar más de 2 MB.'); inp.value = ''; return; }
+  const r = new FileReader(); r.onload = e => { document.getElementById('logoPrev').innerHTML = '<img src="' + e.target.result + '" class="w-full h-full object-contain">'; }; r.readAsDataURL(f);
+}
+</script>
+<?php
+}
+
 function page_header($title, $subtitle = '', $actions = '')
 {
     echo '<div class="flex flex-col sm:flex-row sm:items-end gap-3 mb-6">';

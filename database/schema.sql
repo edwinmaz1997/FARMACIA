@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS farmacias (
   dias_alerta_vencimiento INT NOT NULL DEFAULT 90,
   moneda VARCHAR(5) NOT NULL DEFAULT 'Q',
   ticket_pie VARCHAR(255) NULL,
+  logo VARCHAR(255) NULL,
   notas TEXT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

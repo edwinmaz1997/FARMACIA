@@ -35,7 +35,8 @@ if (is_post()) {
         if ($id) {
             $d['fecha_vencimiento'] = p('fecha_vencimiento') ?: date('Y-m-d');
             update('farmacias', $d, 'id = ?', [$id]);
-            flash('success', 'Farmacia actualizada.');
+            if ($err = procesar_logo($id)) flash('error', $err);
+            else flash('success', 'Farmacia actualizada.');
             redirect('admin_farmacias', ['a' => 'ver', 'id' => $id]);
         }
         $email = strtolower(p('admin_email'));
@@ -60,6 +61,7 @@ if (is_post()) {
             insert('pagos_suscripcion', ['farmacia_id' => $id, 'monto' => $d['precio_suscripcion'], 'fecha_pago' => date('Y-m-d'), 'periodo_desde' => $inicio, 'periodo_hasta' => $d['fecha_vencimiento'], 'metodo' => 'Efectivo', 'notas' => 'Pago inicial']);
         }
         db()->commit();
+        if ($err = procesar_logo($id)) flash('error', $err);
         flash('success', 'Farmacia creada. El administrador ya puede iniciar sesión con ' . $email . '.');
         redirect('admin_farmacias', ['a' => 'ver', 'id' => $id]);
     }
@@ -155,7 +157,7 @@ if ($a === 'nueva' || $a === 'editar') {
     layout_start($f ? 'Editar farmacia' : 'Nueva farmacia', 'admin_farmacias');
     page_header($f ? 'Editar ' . $f['nombre'] : 'Nueva farmacia', 'Datos del negocio y de la suscripción.', '<a href="' . url('admin_farmacias') . '" class="btn-light"><i data-lucide="arrow-left" class="w-4 h-4"></i> Volver</a>');
     ?>
-<form method="post" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<form method="post" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <?= csrf_field() ?>
   <input type="hidden" name="accion" value="guardar">
   <input type="hidden" name="id" value="<?= $f ? (int) $f['id'] : 0 ?>">
@@ -171,6 +173,7 @@ if ($a === 'nueva' || $a === 'editar') {
         <div class="sm:col-span-2"><label class="label">Dirección</label><input name="direccion" value="<?= e($v('direccion')) ?>" class="input"></div>
         <div class="sm:col-span-2"><label class="label">Notas internas</label><textarea name="notas" rows="2" class="input"><?= e($v('notas')) ?></textarea></div>
       </div>
+      <div class="mt-5 pt-5 border-t border-slate-100"><label class="label">Logo</label><?php logo_field($f); ?></div>
     </div>
     <?php if (!$f): ?>
     <div class="card p-6">
@@ -425,7 +428,8 @@ page_header('Farmacias', count($lista) . ' registradas', '<a href="' . url('admi
   <?php foreach ($lista as $f): list($t, $c) = estado_suscripcion($f); ?>
     <div class="card p-5 flex flex-col">
       <div class="flex items-start gap-3">
-        <div class="h-11 w-11 rounded-xl bg-gradient-to-br from-brand-100 to-teal-100 text-brand-700 grid place-items-center font-extrabold"><?= e(strtoupper(mb_substr($f['nombre'], 0, 2))) ?></div>
+        <?php if ($lu = logo_url($f)): ?><div class="h-11 w-11 shrink-0 rounded-xl border border-slate-200 bg-white p-0.5 overflow-hidden"><img src="<?= e($lu) ?>" alt="" class="w-full h-full object-contain"></div>
+        <?php else: ?><div class="h-11 w-11 rounded-xl bg-gradient-to-br from-brand-100 to-teal-100 text-brand-700 grid place-items-center font-extrabold"><?= e(strtoupper(mb_substr($f['nombre'], 0, 2))) ?></div><?php endif; ?>
         <div class="flex-1 min-w-0">
           <a href="<?= url('admin_farmacias', ['a' => 'ver', 'id' => $f['id']]) ?>" class="font-bold text-slate-900 hover:text-brand-700 block truncate"><?= e($f['nombre']) ?></a>
           <div class="text-xs text-slate-500 truncate"><?= e($f['responsable'] ?: 'Sin responsable') ?> · <?= e($f['telefono'] ?: 'Sin teléfono') ?></div>

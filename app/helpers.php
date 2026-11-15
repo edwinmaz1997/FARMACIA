@@ -21,6 +21,7 @@ function db()
         );
         $pdo->exec("SET time_zone = '" . date('P') . "'");
         $pdo->exec("SET SESSION sql_mode = REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', '')");
+        migrar($pdo);
     }
     return $pdo;
 }
@@ -347,4 +348,56 @@ function paginar($total, $porPagina = 25)
     $paginas = max(1, (int) ceil($total / $porPagina));
     $pag = min($pag, $paginas);
     return [$pag, $paginas, ($pag - 1) * $porPagina, $porPagina];
+}
+
+// ---------- Migraciones automáticas (el hosting no tiene terminal) ----------
+const SCHEMA_VERSION = 2;
+
+function migrar(PDO $pdo)
+{
+    if (isset($_SESSION['schema_v']) && $_SESSION['schema_v'] >= SCHEMA_VERSION) return;
+    $col = function ($tabla, $columna) use ($pdo) {
+        $st = $pdo->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+        $st->execute([$tabla, $columna]);
+        return (int) $st->fetchColumn() > 0;
+    };
+    // v2: logo de la farmacia
+    if (!$col('farmacias', 'logo')) $pdo->exec('ALTER TABLE farmacias ADD COLUMN logo VARCHAR(255) NULL AFTER ticket_pie');
+    if (session_status() === PHP_SESSION_ACTIVE) $_SESSION['schema_v'] = SCHEMA_VERSION;
+}
+
+// ---------- Logo de farmacia ----------
+function logo_url($f)
+{
+    if (!$f || empty($f['logo'])) return null;
+    $ruta = __DIR__ . '/../' . $f['logo'];
+    return file_exists($ruta) ? $f['logo'] . '?v=' . filemtime($ruta) : null;
+}
+
+/** Procesa el campo de archivo "logo" y la casilla "quitar_logo". Devuelve mensaje de error o null. */
+function procesar_logo($farmaciaId)
+{
+    $f = one('SELECT id, logo FROM farmacias WHERE id = ?', [$farmaciaId]);
+    if (!$f) return null;
+    $borrarActual = function () use ($f) {
+        if ($f['logo'] && strpos($f['logo'], 'uploads/logos/') === 0 && file_exists(__DIR__ . '/../' . $f['logo'])) @unlink(__DIR__ . '/../' . $f['logo']);
+    };
+    if (p('quitar_logo') === '1') {
+        $borrarActual();
+        update('farmacias', ['logo' => null], 'id = ?', [$farmaciaId]);
+    }
+    if (empty($_FILES['logo']) || $_FILES['logo']['error'] === UPLOAD_ERR_NO_FILE) return null;
+    $up = $_FILES['logo'];
+    if ($up['error'] !== UPLOAD_ERR_OK) return 'No se pudo subir el logo (código ' . $up['error'] . ').';
+    if ($up['size'] > 2 * 1024 * 1024) return 'El logo no debe pesar más de 2 MB.';
+    $info = @getimagesize($up['tmp_name']);
+    $tipos = [IMAGETYPE_PNG => 'png', IMAGETYPE_JPEG => 'jpg', IMAGETYPE_WEBP => 'webp', IMAGETYPE_GIF => 'gif'];
+    if (!$info || !isset($tipos[$info[2]])) return 'El logo debe ser una imagen PNG, JPG, WEBP o GIF.';
+    $dir = __DIR__ . '/../uploads/logos';
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true)) return 'No se pudo crear la carpeta de logos en el servidor.';
+    $nombre = 'f' . (int) $farmaciaId . '_' . bin2hex(random_bytes(6)) . '.' . $tipos[$info[2]];
+    if (!@move_uploaded_file($up['tmp_name'], $dir . '/' . $nombre)) return 'No se pudo guardar el logo en el servidor.';
+    $borrarActual();
+    update('farmacias', ['logo' => 'uploads/logos/' . $nombre], 'id = ?', [$farmaciaId]);
+    return null;
 }

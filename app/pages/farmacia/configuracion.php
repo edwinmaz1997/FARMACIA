@@ -19,6 +19,10 @@ if (is_post()) {
         'moneda' => mb_substr(p('moneda') ?: 'Q', 0, 5),
         'ticket_pie' => nulo(p('ticket_pie')),
     ], 'id = ?', [$F]);
+    if ($err = procesar_logo($F)) {
+        flash('error', $err);
+        redirect('configuracion');
+    }
     flash('success', 'Configuración guardada.');
     redirect('configuracion');
 }
@@ -31,8 +35,12 @@ layout_start('Configuración', 'configuracion');
 page_header('Configuración', 'Datos de la farmacia, alertas y ticket.');
 ?>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-  <form method="post" class="lg:col-span-2 space-y-6">
+  <form method="post" enctype="multipart/form-data" class="lg:col-span-2 space-y-6">
     <?= csrf_field() ?>
+    <div class="card p-6">
+      <h3 class="font-bold mb-4">Logo</h3>
+      <?php logo_field($f); ?>
+    </div>
     <div class="card p-6">
       <h3 class="font-bold mb-4">Datos del negocio</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
