@@ -42,7 +42,7 @@ page_header('Hola, ' . explode(' ', $_SESSION['nombre'])[0] . ' 👋', 'Resumen 
   ?>
 </div>
 
-<div class="grid lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <div class="card p-5 lg:col-span-2">
     <div class="flex items-center justify-between mb-4">
       <h3 class="font-bold text-slate-900">Ingresos por suscripciones</h3>

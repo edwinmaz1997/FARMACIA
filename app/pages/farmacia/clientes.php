@@ -42,7 +42,7 @@ if ($a === 'nuevo' || $a === 'editar') {
     ?>
 <form method="post" class="card p-6 max-w-3xl">
   <?= csrf_field() ?><input type="hidden" name="accion" value="guardar"><input type="hidden" name="id" value="<?= $c ? (int) $c['id'] : 0 ?>">
-  <div class="grid sm:grid-cols-2 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div class="sm:col-span-2"><label class="label">Nombre completo *</label><input name="nombre" value="<?= e($v('nombre')) ?>" class="input" required autofocus></div>
     <div><label class="label">NIT</label><input name="nit" value="<?= e($v('nit')) ?>" class="input" placeholder="CF"></div>
     <div><label class="label">DPI</label><input name="dpi" value="<?= e($v('dpi')) ?>" class="input"></div>
@@ -72,7 +72,7 @@ if ($a === 'ver') {
   <?php stat_card('Total comprado', money($st['t']), 'wallet', 'brand'); stat_card('Compras', num($st['n']), 'receipt', 'indigo', 'Ticket promedio ' . money($st['n'] ? $st['t'] / $st['n'] : 0)); stat_card('Última compra', $st['ult'] ? fdate($st['ult']) : '—', 'calendar', 'amber'); ?>
 </div>
 <?php if ($c['notas']): ?><div class="card p-4 mb-6 bg-amber-50/50 border-amber-200 text-sm flex gap-2"><i data-lucide="sticky-note" class="w-4 h-4 text-amber-600 shrink-0"></i><?= nl2br(e($c['notas'])) ?></div><?php endif; ?>
-<div class="grid lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <div class="card overflow-hidden lg:col-span-2">
     <div class="p-5 border-b border-slate-100"><h3 class="font-bold">Historial de compras</h3></div>
     <div class="overflow-x-auto"><table class="tbl">
@@ -121,16 +121,16 @@ page_header('Clientes', num($total) . ' clientes', '<a href="' . url('clientes',
 </form>
 <div class="card overflow-hidden">
   <div class="overflow-x-auto"><table class="tbl">
-    <thead><tr><th>Cliente</th><th>NIT</th><th>Teléfono</th><th class="text-right">Compras</th><th class="text-right">Total</th><th>Última</th><th></th></tr></thead>
+    <thead><tr><th>Cliente</th><th class="hidden sm:table-cell">NIT</th><th class="hidden md:table-cell">Teléfono</th><th class="hidden md:table-cell text-right">Compras</th><th class="text-right">Total</th><th class="hidden lg:table-cell">Última</th><th class="hidden sm:table-cell"></th></tr></thead>
     <tbody><?php foreach ($lista as $c): ?>
       <tr>
         <td><a href="<?= url('clientes', ['a' => 'ver', 'id' => $c['id']]) ?>" class="font-semibold hover:text-brand-700"><?= e($c['nombre']) ?></a><?php if ($c['email']): ?><div class="text-xs text-slate-500"><?= e($c['email']) ?></div><?php endif; ?></td>
-        <td><?= e($c['nit'] ?: 'CF') ?></td>
-        <td><?= $c['telefono'] ? '<a class="text-brand-700" href="https://wa.me/502' . e(preg_replace('/\D/', '', $c['telefono'])) . '" target="_blank">' . e($c['telefono']) . '</a>' : '—' ?></td>
-        <td class="text-right"><?= num($c['compras']) ?></td>
+        <td class="hidden sm:table-cell"><?= e($c['nit'] ?: 'CF') ?></td>
+        <td class="hidden md:table-cell"><?= $c['telefono'] ? '<a class="text-brand-700" href="https://wa.me/502' . e(preg_replace('/\D/', '', $c['telefono'])) . '" target="_blank">' . e($c['telefono']) . '</a>' : '—' ?></td>
+        <td class="hidden md:table-cell text-right"><?= num($c['compras']) ?></td>
         <td class="text-right font-semibold"><?= money($c['total']) ?></td>
-        <td class="text-slate-500 whitespace-nowrap"><?= fdate($c['ultima']) ?></td>
-        <td class="text-right whitespace-nowrap"><a href="<?= url('clientes', ['a' => 'ver', 'id' => $c['id']]) ?>" class="btn-light btn-sm">Ver</a> <a href="<?= url('clientes', ['a' => 'editar', 'id' => $c['id']]) ?>" class="btn-light btn-sm"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></a></td>
+        <td class="hidden lg:table-cell text-slate-500 whitespace-nowrap"><?= fdate($c['ultima']) ?></td>
+        <td class="hidden sm:table-cell text-right whitespace-nowrap"><a href="<?= url('clientes', ['a' => 'ver', 'id' => $c['id']]) ?>" class="btn-light btn-sm">Ver</a> <a href="<?= url('clientes', ['a' => 'editar', 'id' => $c['id']]) ?>" class="btn-light btn-sm"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></a></td>
       </tr>
     <?php endforeach; ?></tbody>
   </table><?php if (!$lista) echo empty_state('No hay clientes registrados', 'users'); ?></div>

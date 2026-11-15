@@ -49,16 +49,41 @@ function head_html($title)
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#059669">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="<?= $app ?>">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <title><?= e($title) ?> · <?= $app ?></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%2310b981'/><path d='M13 8h6v5h5v6h-5v5h-6v-5H8v-6h5z' fill='white'/></svg>">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
 <link rel="stylesheet" href="assets/app.css?v=<?= @filemtime(__DIR__ . '/../assets/app.css') ?>">
 <script src="assets/vendor/lucide.min.js"></script>
 <script>
 const CSRF = <?= json_encode(csrf_token()) ?>;
 function fmtMoney(n) { return <?= json_encode(moneda() . ' ') ?> + Number(n || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+// Bloquear zoom (pinch y doble toque) en móviles
+document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+// App instalable (PWA)
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+let _promptInstalar = null;
+const _esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const _instalada = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+function _mostrarInstalar(v) { document.querySelectorAll('[data-instalar]').forEach(el => el.classList.toggle('hidden', !v)); }
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); _promptInstalar = e; _mostrarInstalar(true); });
+window.addEventListener('appinstalled', () => { _promptInstalar = null; _mostrarInstalar(false); });
+document.addEventListener('DOMContentLoaded', () => { if (_esIOS && !_instalada()) _mostrarInstalar(true); });
+async function instalarApp() {
+  if (_promptInstalar) { _promptInstalar.prompt(); await _promptInstalar.userChoice; _promptInstalar = null; _mostrarInstalar(false); return; }
+  const m = document.getElementById('modalInstalar'); if (m) m.classList.remove('hidden');
+}
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 </script>
 <script src="assets/vendor/chart.umd.min.js"></script>
@@ -103,6 +128,9 @@ function layout_start($title, $active = '')
       <?php endforeach; ?>
     </nav>
     <div class="p-3 border-t border-slate-100">
+      <button data-instalar onclick="instalarApp()" class="hidden w-full mb-2 flex items-center gap-3 rounded-xl bg-gradient-to-r from-brand-50 to-teal-50 px-3 py-2.5 text-sm font-semibold text-brand-800 hover:from-brand-100 hover:to-teal-100">
+        <i data-lucide="smartphone" class="w-[18px] h-[18px]"></i> Instalar app <i data-lucide="download" class="w-4 h-4 ml-auto"></i>
+      </button>
       <div class="flex items-center gap-3 rounded-xl p-2">
         <div class="h-9 w-9 rounded-full bg-slate-900 text-white grid place-items-center text-sm font-bold"><?= e($iniciales) ?></div>
         <div class="flex-1 min-w-0">
@@ -120,6 +148,7 @@ function layout_start($title, $active = '')
       <button class="lg:hidden p-2 -ml-2 rounded-lg hover:bg-slate-100" onclick="toggleSidebar(true)"><i data-lucide="menu" class="w-5 h-5"></i></button>
       <h1 class="font-bold text-slate-900 truncate"><?= e($title) ?></h1>
       <div class="ml-auto flex items-center gap-2">
+        <button data-instalar onclick="instalarApp()" class="hidden lg:!hidden p-2 rounded-lg text-brand-700 hover:bg-brand-50" title="Instalar app"><i data-lucide="download" class="w-5 h-5"></i></button>
         <?php if (fid()): ?>
           <a href="<?= url('pos') ?>" class="btn-primary btn-sm hidden sm:inline-flex"><i data-lucide="plus" class="w-4 h-4"></i> Nueva venta</a>
         <?php endif; ?>
@@ -164,6 +193,7 @@ function layout_end()
     </main>
   </div>
 </div>
+<?php install_ui(); ?>
 <script>
 function toggleSidebar(open) {
   document.getElementById('sidebar').classList.toggle('-translate-x-full', !open);
@@ -175,6 +205,27 @@ setTimeout(() => document.querySelectorAll('.flash').forEach(el => el.style.disp
 </script>
 </body>
 </html>
+<?php
+}
+
+function install_ui()
+{
+    $app = e($GLOBALS['config']['app_name']);
+    ?>
+<div id="modalInstalar" class="hidden fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm grid place-items-end sm:place-items-center p-4 no-print" onclick="if(event.target===this)this.classList.add('hidden')">
+  <div class="card w-full max-w-sm p-6">
+    <div class="flex items-center gap-3 mb-4">
+      <img src="assets/icons/icon-192.png" alt="" class="w-12 h-12 rounded-xl">
+      <div><div class="font-bold">Instalar <?= $app ?></div><div class="text-xs text-slate-500">Úsala como una app desde tu pantalla de inicio</div></div>
+    </div>
+    <ol class="space-y-3 text-sm text-slate-700">
+      <li class="flex gap-3"><span class="h-6 w-6 shrink-0 rounded-full bg-brand-50 text-brand-700 grid place-items-center text-xs font-bold">1</span><span>Toca el botón <b>Compartir</b> <i data-lucide="share" class="w-4 h-4 inline -mt-1"></i> en la barra de Safari.</span></li>
+      <li class="flex gap-3"><span class="h-6 w-6 shrink-0 rounded-full bg-brand-50 text-brand-700 grid place-items-center text-xs font-bold">2</span><span>Elige <b>Agregar a inicio</b> <i data-lucide="square-plus" class="w-4 h-4 inline -mt-1"></i>.</span></li>
+      <li class="flex gap-3"><span class="h-6 w-6 shrink-0 rounded-full bg-brand-50 text-brand-700 grid place-items-center text-xs font-bold">3</span><span>Toca <b>Agregar</b>. En Android usa el menú ⋮ → <b>Instalar app</b>.</span></li>
+    </ol>
+    <button onclick="document.getElementById('modalInstalar').classList.add('hidden')" class="btn-primary w-full mt-6">Entendido</button>
+  </div>
+</div>
 <?php
 }
 

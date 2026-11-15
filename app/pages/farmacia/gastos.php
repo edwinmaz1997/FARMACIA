@@ -45,7 +45,7 @@ $sel = '<div class="sm:w-52"><label class="label">Categoría</label><select name
 foreach ($cats as $c) $sel .= '<option ' . (g('cat') === $c ? 'selected' : '') . '>' . e($c) . '</option>';
 date_filter_form('gastos', $sel . '</select></div>');
 ?>
-<div class="grid lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <div class="card overflow-hidden lg:col-span-2">
     <div class="overflow-x-auto"><table class="tbl">
       <thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Método</th><th class="text-right">Monto</th><th></th></tr></thead>

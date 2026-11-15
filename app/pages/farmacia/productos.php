@@ -84,10 +84,10 @@ if ($a === 'nuevo' || $a === 'editar') {
     layout_start($pr ? 'Editar producto' : 'Nuevo producto', 'productos');
     page_header($pr ? 'Editar producto' : 'Nuevo producto', '', '<a href="' . url('productos') . '" class="btn-light"><i data-lucide="arrow-left" class="w-4 h-4"></i> Productos</a>');
     ?>
-<form method="post" class="grid lg:grid-cols-3 gap-6">
+<form method="post" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <?= csrf_field() ?><input type="hidden" name="accion" value="guardar"><input type="hidden" name="id" value="<?= $pr ? (int) $pr['id'] : 0 ?>">
   <div class="card p-6 lg:col-span-2">
-    <div class="grid sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="sm:col-span-2"><label class="label">Nombre comercial *</label><input name="nombre" value="<?= e($v('nombre')) ?>" class="input" required autofocus placeholder="Ej. Acetaminofén 500 mg"></div>
       <div><label class="label">Código de barras</label><input name="codigo" value="<?= e($v('codigo')) ?>" class="input" placeholder="Escanea o escribe"></div>
       <div><label class="label">Categoría</label><select name="categoria_id" class="input"><option value="">Sin categoría</option><?php foreach ($categorias as $c): ?><option value="<?= $c['id'] ?>" <?= (int) $v('categoria_id') === (int) $c['id'] ? 'selected' : '' ?>><?= e($c['nombre']) ?></option><?php endforeach; ?></select></div>
@@ -254,7 +254,7 @@ page_header('Productos', num($total) . ' productos', '<a href="' . url('producto
 <div class="card overflow-hidden">
   <div class="overflow-x-auto">
     <table class="tbl">
-      <thead><tr><th>Producto</th><th>Categoría</th><th class="text-right">Precio</th><th class="text-right">Stock</th><th>Próx. vencimiento</th><th></th></tr></thead>
+      <thead><tr><th>Producto</th><th class="hidden md:table-cell">Categoría</th><th class="text-right">Precio</th><th class="text-right">Stock</th><th class="hidden md:table-cell">Próx. vencimiento</th><th class="hidden sm:table-cell"></th></tr></thead>
       <tbody>
       <?php foreach ($lista as $r): $d = dias_hasta($r['prox_venc']); ?>
         <tr>
@@ -263,11 +263,11 @@ page_header('Productos', num($total) . ' productos', '<a href="' . url('producto
             <?= $r['requiere_receta'] ? badge('Rx', 'amber') : '' ?>
             <div class="text-xs text-slate-500"><?= e(implode(' · ', array_filter([$r['presentacion'], $r['principio_activo'], $r['laboratorio'], $r['codigo']]))) ?></div>
           </td>
-          <td class="text-slate-500"><?= e($r['categoria'] ?: '—') ?></td>
+          <td class="hidden md:table-cell text-slate-500"><?= e($r['categoria'] ?: '—') ?></td>
           <td class="text-right font-semibold whitespace-nowrap"><?= money($r['precio_venta']) ?></td>
           <td class="text-right"><?= badge(num($r['stock']), $r['stock'] <= 0 ? 'rose' : ($r['stock'] <= $r['stock_minimo'] ? 'amber' : 'emerald')) ?></td>
-          <td class="whitespace-nowrap"><?php if ($r['prox_venc']): ?><?= fdate($r['prox_venc']) ?> <?= $d < 0 ? badge('Vencido', 'rose') : ($d <= $dias ? badge($d . ' d', $d <= 30 ? 'rose' : 'amber') : '') ?><?php else: ?><span class="text-slate-400">—</span><?php endif; ?></td>
-          <td class="text-right whitespace-nowrap">
+          <td class="hidden md:table-cell whitespace-nowrap"><?php if ($r['prox_venc']): ?><?= fdate($r['prox_venc']) ?> <?= $d < 0 ? badge('Vencido', 'rose') : ($d <= $dias ? badge($d . ' d', $d <= 30 ? 'rose' : 'amber') : '') ?><?php else: ?><span class="text-slate-400">—</span><?php endif; ?></td>
+          <td class="hidden sm:table-cell text-right whitespace-nowrap">
             <a href="<?= url('productos', ['a' => 'ver', 'id' => $r['id']]) ?>" class="btn-light btn-sm">Ver</a>
             <?php if (is_admin()): ?><a href="<?= url('productos', ['a' => 'editar', 'id' => $r['id']]) ?>" class="btn-light btn-sm"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></a><?php endif; ?>
           </td>

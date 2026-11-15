@@ -53,7 +53,7 @@ $lista = all("SELECT u.*, (SELECT COUNT(*) FROM ventas v WHERE v.usuario_id = u.
 layout_start('Usuarios', 'usuarios');
 page_header('Usuarios', 'Administradores tienen acceso completo. Vendedores solo pueden vender, ver productos/inventario y gestionar clientes.', '<button onclick="editar(null)" class="btn-primary"><i data-lucide="user-plus" class="w-4 h-4"></i> Nuevo usuario</button>');
 ?>
-<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
   <?php foreach ($lista as $u): ?>
     <div class="card p-5 <?= $u['activo'] ? '' : 'opacity-60' ?>">
       <div class="flex items-center gap-3">

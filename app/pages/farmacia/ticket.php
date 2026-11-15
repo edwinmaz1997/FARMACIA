@@ -6,7 +6,7 @@ $det = all('SELECT d.*, p.nombre, p.presentacion FROM venta_detalle d JOIN produ
 $f = farmacia_actual();
 ?>
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Ticket #<?= $v['numero'] ?></title>
 <style>
   * { box-sizing: border-box; }

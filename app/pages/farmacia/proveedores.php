@@ -51,7 +51,7 @@ page_header('Proveedores', count($lista) . ' proveedores', '<a href="' . url('pr
   <div class="relative flex-1"><i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i><input name="q" value="<?= e($t) ?>" placeholder="Nombre, NIT o contacto" class="input pl-10"></div>
   <button class="btn-dark">Buscar</button>
 </form>
-<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
   <?php foreach ($lista as $r): ?>
     <div class="card p-5">
       <div class="flex items-start gap-3">
@@ -77,7 +77,7 @@ page_header('Proveedores', count($lista) . ' proveedores', '<a href="' . url('pr
   <form method="post" id="fp" class="card w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
     <?= csrf_field() ?><input type="hidden" name="accion" value="guardar"><input type="hidden" name="id">
     <h3 class="font-bold text-lg" id="mTitulo">Proveedor</h3>
-    <div class="grid sm:grid-cols-2 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div class="sm:col-span-2"><label class="label">Nombre / razón social *</label><input name="nombre" class="input" required></div>
       <div><label class="label">NIT</label><input name="nit" class="input"></div>
       <div><label class="label">Contacto / visitador</label><input name="contacto" class="input"></div>

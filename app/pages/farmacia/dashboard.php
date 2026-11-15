@@ -47,7 +47,7 @@ page_header($saludo . ', ' . explode(' ', $_SESSION['nombre'])[0], 'Así va ' . 
   ?>
 </div>
 
-<div class="grid xl:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
   <div class="card p-5 xl:col-span-2">
     <div class="flex items-center justify-between mb-4">
       <h3 class="font-bold text-slate-900">Ventas de los últimos 30 días</h3>
@@ -75,7 +75,7 @@ page_header($saludo . ', ' . explode(' ', $_SESSION['nombre'])[0], 'Así va ' . 
   </div>
 </div>
 
-<div class="grid xl:grid-cols-3 gap-6 mt-6">
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
   <div class="card overflow-hidden">
     <div class="p-5 border-b border-slate-100 flex items-center justify-between">
       <h3 class="font-bold text-slate-900 flex items-center gap-2"><i data-lucide="calendar-x" class="w-4 h-4 text-amber-500"></i> Lotes por vencer</h3>

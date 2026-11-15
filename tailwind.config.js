@@ -1,7 +1,7 @@
 /** Configuración de Tailwind. El CSS se compila en GitHub Actions (y localmente con: npx tailwindcss@3 -i assets/src/app.css -o assets/app.css --minify) */
 const colores = 'brand|slate|indigo|emerald|rose|amber|sky|red';
 module.exports = {
-  content: ['./*.php', './app/**/*.php'],
+  content: ['./*.php', './*.html', './app/**/*.php'],
   safelist: [
     { pattern: new RegExp(`^bg-(${colores})-(50|100|500|600)$`) },
     { pattern: new RegExp(`^text-(${colores})-(600|700)$`) },

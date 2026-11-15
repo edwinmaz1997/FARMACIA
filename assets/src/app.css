@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; }
+    body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+    /* iOS hace zoom al enfocar campos con letra menor a 16px */
+    @media (max-width: 639px) { input, select, textarea { font-size: 16px !important; } }
+}
+
 @layer components {
     .card { @apply bg-white rounded-2xl border border-slate-200/70 shadow-soft; }
     .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition active:scale-[.98] disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap; }

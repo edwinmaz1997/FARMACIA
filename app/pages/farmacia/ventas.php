@@ -35,7 +35,7 @@ if ($a === 'ver') {
     page_header('Venta #' . $v['numero'], fdatetime($v['fecha']) . ' · ' . ($v['estado'] === 'anulada' ? badge('Anulada', 'rose') : badge('Completada', 'emerald')),
         '<a href="' . url('ventas') . '" class="btn-light"><i data-lucide="arrow-left" class="w-4 h-4"></i> Ventas</a><a target="_blank" href="' . url('ticket', ['id' => $v['id']]) . '" class="btn-dark"><i data-lucide="printer" class="w-4 h-4"></i> Ticket</a>');
     ?>
-<div class="grid lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <div class="card overflow-hidden lg:col-span-2">
     <div class="overflow-x-auto">
       <table class="tbl">
@@ -128,18 +128,18 @@ date_filter_form('ventas', $extra, [], date('Y-m-d'), date('Y-m-d'));
 <div class="card overflow-hidden">
   <div class="overflow-x-auto">
     <table class="tbl">
-      <thead><tr><th>No.</th><th>Fecha</th><th>Cliente</th><th>Vendedor</th><th>Método</th><th class="text-right">Items</th><th class="text-right">Total</th><th></th></tr></thead>
+      <thead><tr><th>No.</th><th>Fecha</th><th class="hidden sm:table-cell">Cliente</th><th class="hidden lg:table-cell">Vendedor</th><th class="hidden md:table-cell">Método</th><th class="hidden md:table-cell text-right">Items</th><th class="text-right">Total</th><th class="hidden sm:table-cell"></th></tr></thead>
       <tbody>
       <?php foreach ($ventas as $v): ?>
         <tr class="<?= $v['estado'] === 'anulada' ? 'opacity-60' : '' ?>">
-          <td class="font-bold">#<?= $v['numero'] ?></td>
-          <td class="whitespace-nowrap"><?= fdatetime($v['fecha']) ?></td>
-          <td><?= e($v['cliente'] ?: 'Consumidor final') ?></td>
-          <td class="text-slate-500"><?= e($v['vendedor']) ?></td>
-          <td><?= badge(ucfirst($v['metodo_pago']), $v['metodo_pago'] === 'efectivo' ? 'emerald' : ($v['metodo_pago'] === 'tarjeta' ? 'indigo' : 'sky')) ?></td>
-          <td class="text-right"><?= num($v['items']) ?></td>
+          <td class="font-bold"><a href="<?= url('ventas', ['a' => 'ver', 'id' => $v['id']]) ?>" class="text-brand-700">#<?= $v['numero'] ?></a></td>
+          <td class="whitespace-nowrap"><?= fdatetime($v['fecha']) ?><div class="sm:hidden text-xs text-slate-500 truncate max-w-[150px]"><?= e($v['cliente'] ?: 'Consumidor final') ?></div></td>
+          <td class="hidden sm:table-cell"><?= e($v['cliente'] ?: 'Consumidor final') ?></td>
+          <td class="hidden lg:table-cell text-slate-500"><?= e($v['vendedor']) ?></td>
+          <td class="hidden md:table-cell"><?= badge(ucfirst($v['metodo_pago']), $v['metodo_pago'] === 'efectivo' ? 'emerald' : ($v['metodo_pago'] === 'tarjeta' ? 'indigo' : 'sky')) ?></td>
+          <td class="hidden md:table-cell text-right"><?= num($v['items']) ?></td>
           <td class="text-right font-bold <?= $v['estado'] === 'anulada' ? 'line-through' : '' ?>"><?= money($v['total']) ?></td>
-          <td class="text-right whitespace-nowrap">
+          <td class="hidden sm:table-cell text-right whitespace-nowrap">
             <a href="<?= url('ventas', ['a' => 'ver', 'id' => $v['id']]) ?>" class="btn-light btn-sm">Ver</a>
             <a target="_blank" href="<?= url('ticket', ['id' => $v['id']]) ?>" class="btn-light btn-sm"><i data-lucide="printer" class="w-3.5 h-3.5"></i></a>
           </td>

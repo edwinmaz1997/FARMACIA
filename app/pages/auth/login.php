@@ -87,9 +87,11 @@ head_html('Iniciar sesión');
         </div>
         <button class="btn-primary w-full py-3">Ingresar <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
       </form>
+      <button data-instalar onclick="instalarApp()" class="hidden btn-light w-full mt-3"><i data-lucide="smartphone" class="w-4 h-4"></i> Instalar como app</button>
     </div>
   </div>
 </div>
+<?php install_ui(); ?>
 <script>lucide.createIcons();</script>
 </body>
 </html>

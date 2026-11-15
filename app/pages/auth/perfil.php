@@ -35,7 +35,7 @@ page_header('Mi perfil', 'Actualiza tu nombre y contraseña.');
   <div><label class="label">Correo</label><input value="<?= e($u['email']) ?>" class="input bg-slate-50" disabled></div>
   <div class="pt-2 text-xs font-bold uppercase tracking-wider text-slate-400">Cambiar contraseña</div>
   <div><label class="label">Contraseña actual</label><input type="password" name="actual" class="input"></div>
-  <div class="grid sm:grid-cols-2 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div><label class="label">Nueva contraseña</label><input type="password" name="nueva" class="input" minlength="8"></div>
     <div><label class="label">Confirmar</label><input type="password" name="confirmar" class="input"></div>
   </div>

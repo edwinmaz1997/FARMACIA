@@ -127,14 +127,14 @@ if ($a === 'nueva' || $a === 'editar') {
     layout_start($f ? 'Editar farmacia' : 'Nueva farmacia', 'admin_farmacias');
     page_header($f ? 'Editar ' . $f['nombre'] : 'Nueva farmacia', 'Datos del negocio y de la suscripción.', '<a href="' . url('admin_farmacias') . '" class="btn-light"><i data-lucide="arrow-left" class="w-4 h-4"></i> Volver</a>');
     ?>
-<form method="post" class="grid lg:grid-cols-3 gap-6">
+<form method="post" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <?= csrf_field() ?>
   <input type="hidden" name="accion" value="guardar">
   <input type="hidden" name="id" value="<?= $f ? (int) $f['id'] : 0 ?>">
   <div class="lg:col-span-2 space-y-6">
     <div class="card p-6">
       <h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4 text-brand-600"></i> Datos de la farmacia</h3>
-      <div class="grid sm:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="sm:col-span-2"><label class="label">Nombre comercial *</label><input name="nombre" value="<?= e($v('nombre')) ?>" class="input" required></div>
         <div><label class="label">NIT</label><input name="nit" value="<?= e($v('nit')) ?>" class="input"></div>
         <div><label class="label">Responsable</label><input name="responsable" value="<?= e($v('responsable')) ?>" class="input"></div>
@@ -147,7 +147,7 @@ if ($a === 'nueva' || $a === 'editar') {
     <?php if (!$f): ?>
     <div class="card p-6">
       <h3 class="font-bold mb-4 flex items-center gap-2"><i data-lucide="user-cog" class="w-4 h-4 text-brand-600"></i> Usuario administrador de la farmacia</h3>
-      <div class="grid sm:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div><label class="label">Nombre *</label><input name="admin_nombre" class="input" required></div>
         <div><label class="label">Correo (usuario) *</label><input type="email" name="admin_email" class="input" required></div>
         <div><label class="label">Contraseña *</label><input name="admin_pass" class="input" minlength="8" required value="<?= e(substr(str_shuffle('abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 10)) ?>"></div>
@@ -227,7 +227,7 @@ if ($a === 'ver') {
   ?>
 </div>
 
-<div class="grid lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <div class="lg:col-span-2 space-y-6">
     <div class="card overflow-hidden">
       <div class="p-5 border-b border-slate-100 flex items-center justify-between"><h3 class="font-bold">Historial de pagos</h3></div>
@@ -378,7 +378,7 @@ page_header('Farmacias', count($lista) . ' registradas', '<a href="' . url('admi
   <button class="btn-dark">Buscar</button>
 </form>
 
-<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
   <?php foreach ($lista as $f): list($t, $c) = estado_suscripcion($f); ?>
     <div class="card p-5 flex flex-col">
       <div class="flex items-start gap-3">

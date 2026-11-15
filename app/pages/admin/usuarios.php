@@ -31,7 +31,7 @@ $lista = all("SELECT * FROM usuarios WHERE rol = 'superadmin' ORDER BY nombre");
 layout_start('Superadministradores', 'admin_usuarios');
 page_header('Superadministradores', 'Usuarios con acceso total a la plataforma.');
 ?>
-<div class="grid lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <div class="card overflow-hidden lg:col-span-2">
     <div class="overflow-x-auto">
       <table class="tbl">

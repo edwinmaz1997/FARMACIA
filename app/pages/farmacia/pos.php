@@ -3,7 +3,7 @@ require_farmacia();
 layout_start('Punto de venta', 'pos');
 $puedePrecio = is_admin();
 ?>
-<div class="grid xl:grid-cols-[1fr_380px] gap-6">
+<div class="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
   <div class="space-y-4 min-w-0">
     <div class="card p-4 relative">
       <div class="relative">
@@ -95,7 +95,7 @@ $puedePrecio = is_admin();
       <div class="flex-1"><h3 class="font-bold text-lg leading-tight">Nuevo cliente</h3><p class="text-sm text-slate-500">Se asignará a esta venta al guardarlo.</p></div>
       <button type="button" onclick="cerrarCliente()" class="p-2 -m-2 rounded-lg text-slate-400 hover:bg-slate-100"><i data-lucide="x" class="w-5 h-5"></i></button>
     </div>
-    <div class="grid sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="sm:col-span-2"><label class="label">Nombre completo *</label><input name="nombre" class="input" required></div>
       <div><label class="label">NIT</label><input name="nit" class="input" placeholder="CF"></div>
       <div><label class="label">Teléfono</label><input name="telefono" class="input" inputmode="tel"></div>

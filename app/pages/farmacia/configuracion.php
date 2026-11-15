@@ -30,12 +30,12 @@ $pagos = all('SELECT * FROM pagos_suscripcion WHERE farmacia_id = ? ORDER BY fec
 layout_start('Configuración', 'configuracion');
 page_header('Configuración', 'Datos de la farmacia, alertas y ticket.');
 ?>
-<div class="grid lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <form method="post" class="lg:col-span-2 space-y-6">
     <?= csrf_field() ?>
     <div class="card p-6">
       <h3 class="font-bold mb-4">Datos del negocio</h3>
-      <div class="grid sm:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="sm:col-span-2"><label class="label">Nombre comercial</label><input name="nombre" value="<?= e($f['nombre']) ?>" class="input" required></div>
         <div><label class="label">NIT</label><input name="nit" value="<?= e($f['nit']) ?>" class="input"></div>
         <div><label class="label">Responsable / Químico biólogo</label><input name="responsable" value="<?= e($f['responsable']) ?>" class="input"></div>
@@ -46,7 +46,7 @@ page_header('Configuración', 'Datos de la farmacia, alertas y ticket.');
     </div>
     <div class="card p-6">
       <h3 class="font-bold mb-4">Preferencias</h3>
-      <div class="grid sm:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div><label class="label">Alertar vencimientos con anticipación de (días)</label><input type="number" min="1" max="730" name="dias_alerta_vencimiento" value="<?= (int) $f['dias_alerta_vencimiento'] ?>" class="input"></div>
         <div><label class="label">Símbolo de moneda</label><input name="moneda" value="<?= e($f['moneda']) ?>" class="input" maxlength="5"></div>
         <div class="sm:col-span-2"><label class="label">Mensaje al pie del ticket</label><input name="ticket_pie" value="<?= e($f['ticket_pie']) ?>" class="input" placeholder="¡Gracias por su compra!"></div>

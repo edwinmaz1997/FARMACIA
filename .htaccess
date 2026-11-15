@@ -22,3 +22,11 @@ DirectoryIndex index.php
     ExpiresByType text/css "access plus 30 days"
     ExpiresByType application/javascript "access plus 30 days"
 </IfModule>
+
+AddType application/manifest+json .webmanifest
+<Files "sw.js">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Service-Worker-Allowed "/"
+    </IfModule>
+</Files>

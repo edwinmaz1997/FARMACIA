@@ -51,12 +51,10 @@ if ($a === 'nueva') {
 </div>
 
 <div class="card overflow-hidden">
-  <div class="overflow-x-auto">
-    <table class="tbl">
-      <thead><tr><th>Producto</th><th>No. lote</th><th>Vencimiento</th><th class="text-right">Cantidad</th><th class="text-right">Costo unit.</th><th class="text-right">Precio venta</th><th class="text-right">Subtotal</th><th></th></tr></thead>
-      <tbody id="lineas"></tbody>
-    </table>
+  <div class="hidden lg:grid grid-cols-[minmax(0,1fr)_110px_150px_90px_110px_110px_110px_36px] gap-3 px-5 py-3 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+    <div>Producto</div><div>No. lote</div><div>Vencimiento</div><div class="text-right">Cantidad</div><div class="text-right">Costo unit.</div><div class="text-right">Precio venta</div><div class="text-right">Subtotal</div><div></div>
   </div>
+  <div id="lineas" class="divide-y divide-slate-100"></div>
   <div class="p-5 border-t border-slate-100 flex flex-col sm:flex-row gap-4 sm:items-center">
     <input id="notas" class="input sm:max-w-md" placeholder="Notas (opcional)">
     <div class="sm:ml-auto flex items-center gap-6">
@@ -73,7 +71,7 @@ if ($a === 'nueva') {
       <div class="flex-1"><h3 class="font-bold text-lg leading-tight">Nuevo producto</h3><p class="text-sm text-slate-500">Se agregará a esta compra al guardarlo.</p></div>
       <button type="button" onclick="modalProd.classList.add('hidden')" class="p-2 -m-2 rounded-lg text-slate-400 hover:bg-slate-100"><i data-lucide="x" class="w-5 h-5"></i></button>
     </div>
-    <div class="grid sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="sm:col-span-2"><label class="label">Nombre *</label><input name="nombre" class="input" required></div>
       <div><label class="label">Código de barras</label><input name="codigo" class="input"></div>
       <div><label class="label">Presentación</label><input name="presentacion" class="input" placeholder="Caja 10 tabletas"></div>
@@ -110,20 +108,24 @@ async function buscar(v) {
 function agregar(p) {
   lineas.push({ producto_id: p.id, nombre: p.nombre, detalle: [p.presentacion, p.laboratorio].filter(Boolean).join(' · '), lote: '', vencimiento: '', cantidad: 1, costo: Number(p.precio_compra) || 0, precio_venta: Number(p.precio_venta) || 0 });
   $('buscar').value = ''; $('resultados').classList.add('hidden'); render();
-  const ins = document.querySelectorAll('#lineas tr:last-child input'); if (ins[0]) ins[0].focus();
+  const ins = document.querySelectorAll('#lineas > div:last-child input'); if (ins[0] && innerWidth >= 1024) ins[0].focus();
 }
 function render() {
+  const lbl = t => `<span class="lg:hidden block text-[11px] font-semibold text-slate-500 mb-1">${t}</span>`;
   $('lineas').innerHTML = lineas.length ? lineas.map((l, k) => `
-    <tr>
-      <td class="min-w-[200px]"><div class="font-semibold">${escapeHtml(l.nombre)}</div><div class="text-xs text-slate-500">${escapeHtml(l.detalle)}</div></td>
-      <td><input value="${escapeHtml(l.lote)}" oninput="lineas[${k}].lote=this.value" class="input py-1.5 w-28" placeholder="Lote"></td>
-      <td><input type="date" value="${l.vencimiento}" onchange="lineas[${k}].vencimiento=this.value" class="input py-1.5 w-40"></td>
-      <td><input type="number" min="1" value="${l.cantidad}" oninput="lineas[${k}].cantidad=parseInt(this.value)||0;tot()" class="input py-1.5 w-24 text-right"></td>
-      <td><input type="number" min="0" step="0.01" value="${l.costo}" oninput="lineas[${k}].costo=Number(this.value)||0;tot()" class="input py-1.5 w-28 text-right"></td>
-      <td><input type="number" min="0" step="0.01" value="${l.precio_venta}" oninput="lineas[${k}].precio_venta=Number(this.value)||0" class="input py-1.5 w-28 text-right"></td>
-      <td class="text-right font-bold whitespace-nowrap" id="sub${k}"></td>
-      <td><button onclick="lineas.splice(${k},1);render()" class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50">✕</button></td>
-    </tr>`).join('') : '<tr><td colspan="8" class="py-14 text-center text-slate-400 text-sm">Agrega productos con el buscador</td></tr>';
+    <div class="grid grid-cols-2 lg:grid-cols-[minmax(0,1fr)_110px_150px_90px_110px_110px_110px_36px] gap-3 px-5 py-4 lg:py-3 items-center">
+      <div class="col-span-2 lg:col-span-1 flex items-start gap-2 min-w-0">
+        <div class="flex-1 min-w-0"><div class="font-semibold text-sm">${escapeHtml(l.nombre)}</div><div class="text-xs text-slate-500 truncate">${escapeHtml(l.detalle)}</div></div>
+        <button onclick="lineas.splice(${k},1);render()" class="lg:hidden p-2 -m-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50">✕</button>
+      </div>
+      <label class="block">${lbl('No. lote')}<input value="${escapeHtml(l.lote)}" oninput="lineas[${k}].lote=this.value" class="input py-1.5" placeholder="Lote"></label>
+      <label class="block">${lbl('Vencimiento')}<input type="date" value="${l.vencimiento}" onchange="lineas[${k}].vencimiento=this.value" class="input py-1.5"></label>
+      <label class="block">${lbl('Cantidad')}<input type="number" min="1" inputmode="numeric" value="${l.cantidad}" oninput="lineas[${k}].cantidad=parseInt(this.value)||0;tot()" class="input py-1.5 text-right"></label>
+      <label class="block">${lbl('Costo unit.')}<input type="number" min="0" step="0.01" inputmode="decimal" value="${l.costo}" oninput="lineas[${k}].costo=Number(this.value)||0;tot()" class="input py-1.5 text-right"></label>
+      <label class="block">${lbl('Precio venta')}<input type="number" min="0" step="0.01" inputmode="decimal" value="${l.precio_venta}" oninput="lineas[${k}].precio_venta=Number(this.value)||0" class="input py-1.5 text-right"></label>
+      <div class="text-right">${lbl('Subtotal')}<span class="font-bold whitespace-nowrap" id="sub${k}"></span></div>
+      <button onclick="lineas.splice(${k},1);render()" class="hidden lg:block p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50">✕</button>
+    </div>`).join('') : '<div class="py-14 text-center text-slate-400 text-sm">Agrega productos con el buscador</div>';
   tot();
 }
 function tot() {
@@ -179,7 +181,7 @@ if ($a === 'ver') {
     <tfoot><tr class="bg-slate-50"><td colspan="6" class="px-4 py-3 font-bold">Total</td><td class="px-4 py-3 text-right text-lg font-extrabold"><?= money($c['total']) ?></td></tr></tfoot>
   </table></div>
 </div>
-<div class="grid lg:grid-cols-2 gap-6 mt-6">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
   <div class="card p-5 text-sm space-y-2"><div class="flex justify-between"><span class="text-slate-500">Registrada por</span><span><?= e($c['usuario']) ?></span></div><div class="flex justify-between"><span class="text-slate-500">Fecha de registro</span><span><?= fdatetime($c['created_at']) ?></span></div><?php if ($c['notas']): ?><div class="bg-slate-50 rounded-lg p-3"><?= e($c['notas']) ?></div><?php endif; ?></div>
   <?php if ($c['estado'] === 'registrada'): ?>
   <form method="post" class="card p-5 space-y-3 no-print" data-confirm="¿Anular esta compra? Se retirará su inventario.">
