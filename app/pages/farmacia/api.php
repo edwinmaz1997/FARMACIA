@@ -134,6 +134,84 @@ if ($action === 'guardar_venta') {
     }
 }
 
+if ($action === 'importar_productos') {
+    if (!is_admin()) json_out(['ok' => false, 'error' => 'Sin permiso'], 403);
+    $filas = isset($in['filas']) && is_array($in['filas']) ? array_slice($in['filas'], 0, 300) : [];
+    $actualizar = !empty($in['actualizar']);
+    $cats = [];
+    foreach (all('SELECT id, nombre FROM categorias WHERE farmacia_id = ?', [$F]) as $c) $cats[mb_strtolower(trim($c['nombre']))] = (int) $c['id'];
+    $txt = function ($r, $k, $max = 200) { return isset($r[$k]) && trim((string) $r[$k]) !== '' ? mb_substr(trim((string) $r[$k]), 0, $max) : null; };
+    $dec = function ($r, $k) { if (!isset($r[$k]) || $r[$k] === '') return null; $v = str_replace([',', 'Q', 'q', ' '], ['', '', '', ''], (string) $r[$k]); return is_numeric($v) ? round((float) $v, 2) : false; };
+    $res = [];
+    $pdo = db();
+    $pdo->beginTransaction();
+    foreach ($filas as $r) {
+        $n = isset($r['_fila']) ? (int) $r['_fila'] : 0;
+        try {
+            $nombre = $txt($r, 'nombre');
+            $codigo = $txt($r, 'codigo', 60);
+            $pv = $dec($r, 'precio_venta');
+            $pc = $dec($r, 'precio_compra');
+            if (!$nombre && !$codigo) throw new UserError('Falta el nombre');
+            if ($pv === false || $pc === false) throw new UserError('Precio inválido');
+            $stockIni = isset($r['stock_inicial']) && $r['stock_inicial'] !== '' ? (int) $r['stock_inicial'] : 0;
+            if ($stockIni < 0) throw new UserError('Stock inicial negativo');
+            $venc = $txt($r, 'vencimiento', 10);
+            if ($venc && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $venc)) throw new UserError('Fecha de vencimiento inválida');
+            $catId = null;
+            if ($cn = $txt($r, 'categoria', 100)) {
+                $k = mb_strtolower($cn);
+                if (!isset($cats[$k])) $cats[$k] = insert('categorias', ['farmacia_id' => $F, 'nombre' => $cn]);
+                $catId = $cats[$k];
+            }
+            $d = array_filter([
+                'nombre' => $nombre,
+                'codigo' => $codigo,
+                'principio_activo' => $txt($r, 'principio_activo'),
+                'presentacion' => $txt($r, 'presentacion', 120),
+                'laboratorio' => $txt($r, 'laboratorio', 120),
+                'unidad' => $txt($r, 'unidad', 30),
+                'categoria_id' => $catId,
+                'precio_compra' => $pc,
+                'precio_venta' => $pv,
+                'stock_minimo' => isset($r['stock_minimo']) && $r['stock_minimo'] !== '' ? max(0, (int) $r['stock_minimo']) : null,
+                'requiere_receta' => isset($r['requiere_receta']) && $r['requiere_receta'] !== '' ? (preg_match('/^(s|si|sí|1|x|true|yes)$/iu', trim((string) $r['requiere_receta'])) ? 1 : 0) : null,
+            ], function ($v) { return $v !== null; });
+
+            $existente = $codigo ? one('SELECT id FROM productos WHERE farmacia_id = ? AND codigo = ? LIMIT 1', [$F, $codigo]) : null;
+            if (!$existente && !$codigo && $nombre) {
+                $existente = one('SELECT id FROM productos WHERE farmacia_id = ? AND nombre = ? AND (presentacion <=> ?) LIMIT 1', [$F, $nombre, isset($d['presentacion']) ? $d['presentacion'] : null]);
+            }
+            if ($existente) {
+                if (!$actualizar) {
+                    $res[] = ['fila' => $n, 'ok' => true, 'accion' => 'omitido', 'msg' => 'Ya existe'];
+                    continue;
+                }
+                $pid = (int) $existente['id'];
+                $d['activo'] = 1;
+                update('productos', $d, 'id = ? AND farmacia_id = ?', [$pid, $F]);
+                $accion = 'actualizado';
+            } else {
+                if (!$nombre) throw new UserError('Falta el nombre');
+                if (!isset($d['precio_venta'])) throw new UserError('Falta el precio de venta');
+                $d['farmacia_id'] = $F;
+                $pid = insert('productos', $d);
+                $accion = 'creado';
+            }
+            if ($stockIni > 0) {
+                $costo = isset($d['precio_compra']) ? $d['precio_compra'] : (float) val('SELECT precio_compra FROM productos WHERE id = ?', [$pid]);
+                $lid = insert('lotes', ['farmacia_id' => $F, 'producto_id' => $pid, 'numero_lote' => $txt($r, 'lote', 60), 'fecha_vencimiento' => $venc, 'cantidad_inicial' => $stockIni, 'cantidad_actual' => $stockIni, 'costo_unitario' => $costo]);
+                registrar_movimiento($pid, $lid, 'ajuste_entrada', $stockIni, 'Importación masiva');
+            }
+            $res[] = ['fila' => $n, 'ok' => true, 'accion' => $accion];
+        } catch (UserError $ex) {
+            $res[] = ['fila' => $n, 'ok' => false, 'msg' => $ex->getMessage()];
+        }
+    }
+    $pdo->commit();
+    json_out(['ok' => true, 'resultados' => $res]);
+}
+
 if ($action === 'guardar_compra') {
     if (!is_admin()) json_out(['ok' => false, 'error' => 'Sin permiso'], 403);
     $items = isset($in['items']) && is_array($in['items']) ? $in['items'] : [];

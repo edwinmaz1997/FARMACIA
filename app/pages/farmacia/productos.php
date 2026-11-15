@@ -77,6 +77,12 @@ if (is_post()) {
 
 $categorias = all('SELECT * FROM categorias WHERE farmacia_id = ? ORDER BY nombre', [$F]);
 
+if ($a === 'importar') {
+    if (!is_admin()) redirect('productos');
+    require __DIR__ . '/productos_importar.php';
+    return;
+}
+
 if ($a === 'nuevo' || $a === 'editar') {
     if (!is_admin()) redirect('productos');
     $pr = $a === 'editar' ? one('SELECT * FROM productos WHERE id = ? AND farmacia_id = ?', [(int) g('id'), $F]) : null;
@@ -226,7 +232,7 @@ $lista = all($sql . " LIMIT $lim OFFSET $off", $params);
 $dias = (int) farmacia_actual()['dias_alerta_vencimiento'];
 
 layout_start('Productos', 'productos');
-page_header('Productos', num($total) . ' productos', '<a href="' . url('productos', array_merge($_GET, ['csv' => 1])) . '" class="btn-light"><i data-lucide="download" class="w-4 h-4"></i> CSV</a>' . (is_admin() ? '<button onclick="document.getElementById(\'cats\').classList.toggle(\'hidden\')" class="btn-light"><i data-lucide="tags" class="w-4 h-4"></i> Categorías</button><a href="' . url('productos', ['a' => 'nuevo']) . '" class="btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Nuevo producto</a>' : ''));
+page_header('Productos', num($total) . ' productos', '<a href="' . url('productos', array_merge($_GET, ['csv' => 1])) . '" class="btn-light"><i data-lucide="download" class="w-4 h-4"></i> CSV</a>' . (is_admin() ? '<a href="' . url('productos', ['a' => 'importar']) . '" class="btn-light"><i data-lucide="file-up" class="w-4 h-4"></i> Importar</a><button onclick="document.getElementById(\'cats\').classList.toggle(\'hidden\')" class="btn-light"><i data-lucide="tags" class="w-4 h-4"></i> Categorías</button><a href="' . url('productos', ['a' => 'nuevo']) . '" class="btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Nuevo producto</a>' : ''));
 ?>
 <?php if (is_admin()): ?>
 <div id="cats" class="hidden card p-5 mb-6">
@@ -275,7 +281,7 @@ page_header('Productos', num($total) . ' productos', '<a href="' . url('producto
       <?php endforeach; ?>
       </tbody>
     </table>
-    <?php if (!$lista) echo empty_state('No hay productos. ' . (is_admin() ? 'Crea el primero con "Nuevo producto".' : ''), 'pill'); ?>
+    <?php if (!$lista) echo empty_state('No hay productos. ' . (is_admin() ? 'Crea el primero con "Nuevo producto" o súbelos todos con "Importar".' : ''), 'pill'); ?>
   </div>
   <?php pagination($pag, $paginas); ?>
 </div>
